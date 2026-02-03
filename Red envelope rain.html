@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>紅包雨遙控器</title>
+    <style>
+        /* 星空背景樣式 */
+        body {
+            margin: 0;
+            padding: 0;
+            background: radial-gradient(ellipse at bottom, #1B2735 0%, #090A0F 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            font-family: 'PingFang TC', sans-serif;
+        }
+
+        /* 按鈕樣式 */
+        #rainBtn {
+            padding: 20px 50px;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            background: linear-gradient(45deg, #ff416c, #ff4b2b);
+            border: none;
+            border-radius: 50px;
+            box-shadow: 0 10px 20px rgba(255, 65, 108, 0.4);
+            cursor: pointer;
+            z-index: 10;
+            transition: transform 0.1s;
+            outline: none;
+        }
+
+        #rainBtn:active {
+            transform: scale(0.9);
+        }
+
+        /* 噴出的 Emoji 樣式 */
+        .emoji {
+            position: absolute;
+            pointer-events: none;
+            animation: blowUp 1s ease-out forwards;
+            font-size: 2rem;
+            z-index: 5;
+        }
+
+        @keyframes blowUp {
+            0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+            100% { transform: translate(var(--x), var(--y)) rotate(360deg); opacity: 0; }
+        }
+
+        /* CSS 星空小動畫 */
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: twinkle var(--duration) infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="stars"></div>
+
+    <button id="rainBtn">按我下紅包雨！</button>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        // ⚠️ 
+        const firebaseConfig = {
+            apiKey: "AIzaSyBtQHEw3Kmxh824E5EG1kP-YpG6ul406gs",
+            authDomain: "red-envelope-rain.firebaseapp.com",
+            databaseURL: "https://red-envelope-rain-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "red-envelope-rain",
+            storageBucket: "red-envelope-rain.firebasestorage.app",
+            messagingSenderId: "532612777563",
+            appId: "1:532612777563:web:d11f6ab78dce4169c3617e"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const countRef = ref(db, 'redPacketCount');
+
+        const btn = document.getElementById('rainBtn');
+
+        // 點擊事件
+        btn.onclick = (e) => {
+            // 1. Firebase 數據加 1 (連動 Unity)
+            runTransaction(countRef, (count) => (count || 0) + 1);
+
+            runTransaction(countRef, (count) => {
+                let newCount = (count || 0) + 1;
+                if (newCount > 50) {
+                    return 0; // 超過 50 次自動重設為 0
+                }
+                return newCount;
+            });
+
+            // 2. 噴發花朵特效
+            createFlowers(e.clientX, e.clientY);
+        };
+
+        // 噴花特效函式
+        function createFlowers(x, y) {
+            const flowers = ['🌸', '🌼', '🌻', '🌹', '🌷'];
+            for (let i = 0; i < 8; i++) {
+                const span = document.createElement('span');
+                span.className = 'emoji';
+                span.innerText = flowers[Math.floor(Math.random() * flowers.length)];
+                
+                // 隨機噴發方向
+                const moveX = (Math.random() - 0.5) * 300;
+                const moveY = (Math.random() - 0.5) * 300;
+                
+                span.style.left = x + 'px';
+                span.style.top = y + 'px';
+                span.style.setProperty('--x', moveX + 'px');
+                span.style.setProperty('--y', moveY + 'px');
+                
+                document.body.appendChild(span);
+                setTimeout(() => span.remove(), 1000);
+            }
+        }
+
+        // 產生背景星星
+        function initStars() {
+            for (let i = 0; i < 50; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                const size = Math.random() * 3 + 'px';
+                star.style.width = size;
+                star.style.height = size;
+                star.style.left = Math.random() * 100 + 'vw';
+                star.style.top = Math.random() * 100 + 'vh';
+                star.style.setProperty('--duration', (Math.random() * 3 + 2) + 's');
+                document.getElementById('stars').appendChild(star);
+            }
+        }
+        initStars();
+    </script>
+</body>
+</html>
