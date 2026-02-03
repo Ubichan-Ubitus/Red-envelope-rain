@@ -97,7 +97,7 @@
         // 點擊事件
         btn.onclick = (e) => {
             // 1. Firebase 數據加 1 (連動 Unity)
-            runTransaction(countRef, (count) => (count || 0) + 1);
+            //runTransaction(countRef, (count) => (count || 0) + 1);
 
             runTransaction(countRef, (count) => {
                 let newCount = (count || 0) + 1;
@@ -151,3 +151,4 @@
     </script>
 </body>
 </html>
+
